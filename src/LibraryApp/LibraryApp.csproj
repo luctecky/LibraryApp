@@ -6,4 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LibraryAppBlazor.Domain\LibraryAppBlazor.Domain.csproj" />
+    <ProjectReference Include="..\LibraryAppBlazor.Infrastructure\LibraryAppBlazor.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

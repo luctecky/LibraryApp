@@ -13,7 +13,7 @@
 
 		//protected constructor to EF Core
 
-		protected Book()
+		public Book()
 		{
 		}
 

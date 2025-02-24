@@ -1,0 +1,91 @@
+﻿@using LibraryAppBlazor.Domain.Entities
+@using LibraryAppBlazor.Domain.Interfaces
+@using Models;
+@inject IBookRepository BookRepository
+@inject NavigationManager NavigationManager
+
+<div class="card">
+	<div class="card-body">
+		<EditForm Model="@bookViewModel" OnValidSubmit="HandleValidSubmit">
+			<DataAnnotationsValidator/>
+
+			<div class="form-group mb-3">
+				<label for="title">Título</label>
+				<InputText id="title" @bind-Value="bookViewModel.Title" class="form-control" />
+				<ValidationMessage For="@(() => bookViewModel.Title)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="author">Autor</label>
+				<InputText id="author" @bind-Vlue="bookViewModel.Author" class="form-control"/>
+				<ValidationMessage For="@(() => bookViewModel.Author)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="isbn">ISBN</label>
+				<InputText id="isbn" @bind-Value="bookViewModel.ISBN" class="form-control"/>
+				<ValidationMessage For="@(() => bookViewModel.ISBN)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="publicationYear">Ano de Publicação</label>
+				<InputNumber id="publicationYear" @bind-Value="bookViewModel.PublicationYear" class="form-control"/>
+				<ValidationMessage For="@(() => bookViewModel.PublicationYear)" />
+			</div>
+
+			<button type="submit" class="btn btn-primary">Salvar</button>
+			<button type="button" class="btn btn-secondary" @onclick="@(() => NavigationManager.NavigateTo("/books"))">Cancelar</button>
+
+		</EditForm>
+
+	</div>
+
+</div>
+
+@code {
+	private BookViewModel  bookViewModel = new BookViewModel();
+
+	[Parameter]
+	public Guid? Id { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (Id.HasValue)
+		{
+			var book = await BookRepository.GetByIdAsync(Id.Value);
+			//Mapping the book to the bookViewModel
+
+			bookViewModel = new BookViewModel
+			{
+				Id = book.Id,
+				Title = book.Title,
+				Author = book.Author,
+				ISBN = book.ISBN,
+				PublicationYear = book.PublicationYear
+			};
+		}
+	}
+
+	private async Task HandleValidSubmit()
+	{
+		//Create a new book object and map the bookViewModel to it
+
+		var book = new Book(
+			bookViewModel.Title,
+			bookViewModel.Author,
+			bookViewModel.ISBN,
+			bookViewModel.PublicationYear
+		);
+
+		if (Id.HasValue)
+		{
+			await BookRepository.UpdateAsync(book);
+		}
+		else
+		{
+			await BookRepository.AddAsync(book);
+		}
+
+		NavigationManager.NavigateTo("/books");
+	}
+}

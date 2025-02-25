@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BibliotecaBlazor.Application\LibraryAppBlazor.Application.csproj" />
     <ProjectReference Include="..\LibraryAppBlazor.Domain\LibraryAppBlazor.Domain.csproj" />
     <ProjectReference Include="..\LibraryAppBlazor.Infrastructure\LibraryAppBlazor.Infrastructure.csproj" />
   </ItemGroup>

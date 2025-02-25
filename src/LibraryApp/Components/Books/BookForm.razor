@@ -1,7 +1,9 @@
 ﻿@using LibraryAppBlazor.Domain.Entities
 @using LibraryAppBlazor.Domain.Interfaces
+@using LibraryAppBlazor.Application.Services
 @using Models;
 @inject IBookRepository BookRepository
+@inject IBookService BookService
 @inject NavigationManager NavigationManager
 
 <div class="card">
@@ -70,22 +72,32 @@
 	{
 		//Create a new book object and map the bookViewModel to it
 
-		var book = new Book(
-			bookViewModel.Title,
-			bookViewModel.Author,
-			bookViewModel.ISBN,
-			bookViewModel.PublicationYear
-		);
-
-		if (Id.HasValue)
+		try
 		{
-			await BookRepository.UpdateAsync(book);
+			if (Id.HasValue)
+			{
+				await BookService.UpdateAsync(
+				Id.Value,
+				bookViewModel.Title,
+				bookViewModel.Author,
+				bookViewModel.ISBN,
+				bookViewModel.PublicationYear
+				);
+			}
+			else
+			{
+				await BookService.CreateAsync(
+				bookViewModel.Title,
+				bookViewModel.Author,
+				bookViewModel.ISBN,
+				bookViewModel.PublicationYear
+				);
+			}
 		}
-		else
+		catch (Exception ex)
 		{
-			await BookRepository.AddAsync(book);
+			//On real world application, we should log the exception
+			Console.WriteLine($"Erro ao salvar o livro: {ex.Message}");
 		}
-
-		NavigationManager.NavigateTo("/books");
 	}
 }

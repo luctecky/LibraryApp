@@ -1,0 +1,68 @@
+﻿@page "/livros"
+@using LibraryAppBlazor.Domain.Entities
+@using LibraryAppBlazor.Domain.Interfaces
+@inject IBookRepository BookRepository
+@inject IJSRuntime JSRuntime
+
+<h3>Biblioteca - Gerenciamento de Livros</h3>
+
+<div class="mb-3">
+    <a href="/livros/novo" class="btn btn-primary">Novo Livro</a>
+</div>
+
+@if (books == null)
+{
+    <p>Carregando...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Autor</th>
+                <th>ISBN</th>
+                <th>Ano</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in books)
+            {
+                <tr>
+                    <td>@book.Title</td>
+                    <td>@book.Author</td>
+                    <td>@book.ISBN</td>
+                    <td>@book.PublicationYear</td>
+                    <td>
+                        <a href="/livros/editar/@book.Id" class="btn btn-sm btn-info">Editar</a>
+                        <button class="btn btn-sm btn-danger" @onclick="(() => DeleteBook(book.Id))">Excluir</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<Book> books;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBooks();
+    }
+
+    private async Task LoadBooks()
+    {
+        books = await BookRepository.GetAllAsync();
+    }
+
+    private async Task DeleteBook(Guid id)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Deseja realmente excluir este livro?"))
+        {
+            await BookRepository.DeleteAsync(id);
+            await LoadBooks();
+        }
+    }
+}

@@ -1,7 +1,8 @@
 using LibraryApp.Components;
+using LibraryAppBlazor.Application.Services;
+using LibraryAppBlazor.Domain.Interfaces;
 using LibraryAppBlazor.Infrastructure.Data;
 using LibraryAppBlazor.Infrastructure.Data.Repositories;
-using LibraryAppBlazor.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +15,7 @@ builder.Services.AddDbContext<LibraryAppDbContext>(options =>
 	options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IBookService, BookService>();
 
 var app = builder.Build();
 

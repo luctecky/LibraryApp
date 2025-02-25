@@ -1,0 +1,12 @@
+﻿@page "/livros/novo"
+@page "/livros/editar/{Id:guid}"
+@using LibraryApp.Components.Books
+
+<h3>@(Id != null ? "Editar" : "Novo") Book</h3>
+
+<BookForm Id="@Id" />
+
+@code {
+	[Parameter]
+	public Guid? Id { get; set; }
+}

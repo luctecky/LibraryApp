@@ -29,7 +29,7 @@
 		}
 
 		//Using private setters to ensure that the properties can only be set from within the class
-		private void SetPublicationYear(int year)
+		public void SetPublicationYear(int year)
 		{
 			if (year < 1400 || year > DateTime.UtcNow.Year)
 			{
@@ -39,7 +39,7 @@
 			PublicationYear = year;
 		}
 
-		private void SetISBN(string isbn)
+		public void SetISBN(string isbn)
 		{
 			if (string.IsNullOrWhiteSpace(isbn))
 			{
@@ -49,7 +49,7 @@
 			ISBN = isbn;
 		}
 
-		private void SetAuthor(string author)
+		public void SetAuthor(string author)
 		{
 			if (string.IsNullOrWhiteSpace(author))
 			{
@@ -59,7 +59,7 @@
 			Author = author;
 		}
 
-		private void SetTitle(string title)
+		public void SetTitle(string title)
 		{
 			if (string.IsNullOrWhiteSpace(title))
 			{

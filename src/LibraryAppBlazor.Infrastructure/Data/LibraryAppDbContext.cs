@@ -8,6 +8,8 @@ namespace LibraryAppBlazor.Infrastructure.Data
 		//DbSet represents a collection of entities that can be queried from the database.
 		public DbSet<Book> Books { get; set; }
 
+		public DbSet<Loan> Loans { get; set; }
+
 		public LibraryAppDbContext(DbContextOptions<LibraryAppDbContext> options)
 			: base(options)
 		{

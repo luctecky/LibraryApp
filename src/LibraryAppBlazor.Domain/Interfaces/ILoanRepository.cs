@@ -1,9 +1,4 @@
 ﻿using LibraryAppBlazor.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LibraryAppBlazor.Domain.Interfaces
 {
@@ -20,7 +15,7 @@ namespace LibraryAppBlazor.Domain.Interfaces
 
 		Task<IEnumerable<Loan>> GetLoansByBookIsAsync(Guid bookId);
 
-		Task<IEnumerable<Loan>> GetLoansByBorrowerAsync(string borrowerName);
+		Task<IEnumerable<Loan>> GetLoansByBorrowerEmailAsync(string email);
 
 		Task AddAsync(Loan loan);
 

@@ -40,6 +40,34 @@ namespace LibraryAppBlazor.Infrastructure.Data
 				entity.Property(e => e.CreatedAt)
 					.IsRequired();
 			});
+
+			//Configure the Loan entity
+			modelBuilder.Entity<Loan>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.BorrowerName)
+					.IsRequired()
+					.HasMaxLength(200);
+
+				entity.Property(e => e.BorrowerEmail)
+					.IsRequired()
+					.HasMaxLength(200);
+
+				entity.Property(e => e.LoanDate)
+					.IsRequired();
+
+				entity.Property(e => e.DueDate)
+					.IsRequired();
+
+				entity.Property(e => e.ReturnDate);
+
+				//Relationship with the Book entity
+				entity.HasOne(e => e.Book)
+					.WithMany() //Define navigation property on the Book entity
+					.HasForeignKey(e => e.BookId)
+					.OnDelete(DeleteBehavior.Cascade); //Cascade delete when a book is deleted
+			});
 		}
 	}
 }

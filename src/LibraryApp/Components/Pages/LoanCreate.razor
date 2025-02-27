@@ -1,0 +1,100 @@
+﻿@page "/emprestimos/novo"
+@using LibraryAppBlazor.Domain.Entities
+@using LibraryAppBlazor.Application.Services
+@using LibraryApp.Models
+@inject IBookService BookService
+@inject ILoanService LoanService
+@inject NavigationManager NavigationManager
+
+<h3>Novo Emprestimo</h3>
+
+<div class="card">
+	<div class="card-body">
+		<EditForm Model="@model" OnValidSubmit="HandleValidSubmit">
+			<DataAnnotationsValidator />
+
+			<div class="form-group mb-3">
+				<label for="bookId">Livro</label>
+				<select id="bookId" @bind="model.BookId" class="form-control">
+					<option value="">Selecione um livro</option>
+					@if (avaliableBooks != null)
+					{
+						foreach (var book in avaliableBooks)
+						{
+							<option value="@book.Id">@book.Title (@book.Author)</option>
+						}
+					}
+				</select>
+				<ValidationMessage For="@(() => model.BookId)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="borrowerName">Nome do Solicitante</label>
+				<InputText id="borrowerName" @bind-Value="model.BorrowerName" class="form-control"></InputText>
+				<ValidationMessage For="@(() => model.BorrowerName)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="borrowerEmail">Email do Solicitante</label>
+				<InputText id="borrowerEmail" @bind-Value="model.BorrowerEmail" class="form-control"></InputText>
+				<ValidationMessage For="@(() => model.BorrowerEmail)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="loanDays">Período de Empréstimo (dias)</label>
+				<InputNumber id="loanDays" @bind-Value="model.LoanDays" class="form-control"></InputNumber>
+				<ValidationMessage For="@(() => model.LoanDays)" />
+			</div>
+
+			@if (model.LoanDays > 0)
+			{
+				<div class="alert alert-info">
+						Data de devolução prevista: <strong>@DateTime.Now.AddDays(model.LoanDays).ToShortDateString()</strong>
+				</div>
+			}
+
+			<button type="submit" class="btn btn-primary">Registrar Empréstimo</button>
+			<button type="button" class="btn btn-secondary" @onclick="@(() => NavigationManager.NavigateTo("/emprestimos"))">Cancelar</button>
+
+		</EditForm>
+
+	</div>
+</div>
+
+@code {
+	private LoanViewModel model = new LoanViewModel();
+	private IEnumerable<Book> avaliableBooks;
+	private string errorMessage;
+
+	protected override async Task OnInitializedAsync()
+	{
+		// Get all books that are not loaned
+		var allbooks = await BookService.GetAllAsync();
+		var activeLoans = await LoanService.GetActiveLoansAsync();
+
+		// Filter books that are not loaned
+		var loanedBooksIds = activeLoans.Select(l => l.BookId).ToHashSet();
+		avaliableBooks = allbooks.Where(b => !loanedBooksIds.Contains(b.Id)).ToList();
+	}
+
+	private async Task HandleValidSubmit()
+	{
+		try
+		{
+			//Use the service to create a new loan
+			await LoanService.CreateLoanAsync(
+			model.BookId,
+			model.BorrowerName,
+			model.BorrowerEmail,
+			model.LoanDays
+			);
+
+			//Redirect to the loans list
+			NavigationManager.NavigateTo("/emprestimos");
+		}
+		catch (Exception ex)
+		{
+			errorMessage = ex.Message;
+		}
+	}
+}

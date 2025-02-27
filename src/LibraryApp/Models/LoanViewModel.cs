@@ -26,7 +26,7 @@ namespace LibraryApp.Models
 		public DateTime? ReturnDate { get; set; }
 
 		[Range(1, 60, ErrorMessage = "O prazo de devolução deve ser entre 1 e 60 dias")]
-		public int LoanPeriod { get; set; } = 14;
+		public int LoanDays { get; set; } = 14;
 
 		public bool IsReturned => ReturnDate.HasValue;
 

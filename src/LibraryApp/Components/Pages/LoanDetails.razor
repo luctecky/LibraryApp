@@ -1,0 +1,211 @@
+﻿// src/LibraryApp/Components/Pages/LoanDetails.razor
+@page "/emprestimos/detalhes/{Id:guid}"
+@using LibraryAppBlazor.Domain.Entities
+@using LibraryAppBlazor.Application.Services
+@inject ILoanService LoanService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<h3>Detalhes do Empréstimo</h3>
+
+@if (loan == null)
+{
+    <p>Carregando...</p>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Informações do Empréstimo</span>
+            <div>
+                <button class="btn btn-sm btn-secondary" @onclick="@(() => NavigationManager.NavigateTo("/emprestimos"))">
+                    Voltar
+                </button>
+                @if (!loan.IsReturned)
+                {
+                    <button class="btn btn-sm btn-success ms-2" @onclick="ReturnBook">Devolver Livro</button>
+                }
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Livro</h5>
+                    <div class="mb-3">
+                        <strong>Título:</strong> @loan.Book.Title
+                    </div>
+                    <div class="mb-3">
+                        <strong>Autor:</strong> @loan.Book.Author
+                    </div>
+                    <div class="mb-3">
+                        <strong>ISBN:</strong> @loan.Book.ISBN
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Informações do Empréstimo</h5>
+                    <div class="mb-3">
+                        <strong>Status:</strong>
+                        @if (loan.IsReturned)
+                        {
+                            <span class="badge bg-success">Devolvido</span>
+                        }
+                        else if (loan.IsOverdue)
+                        {
+                            <span class="badge bg-danger">Vencido</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-primary">Ativo</span>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <strong>Solicitante:</strong> @loan.BorrowerName
+                    </div>
+                    <div class="mb-3">
+                        <strong>Email:</strong> @loan.BorrowerEmail
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-12">
+                    <h5>Datas</h5>
+                    <div class="mb-2">
+                        <strong>Data de Empréstimo:</strong> @loan.LoanDate.ToShortDateString()
+                    </div>
+                    <div class="mb-2">
+                        <strong>Data de Devolução Prevista:</strong> @loan.DueDate.ToShortDateString()
+                    </div>
+                    @if (loan.ReturnDate.HasValue)
+                    {
+                        <div class="mb-2">
+                            <strong>Data de Devolução Efetiva:</strong> @loan.ReturnDate.Value.ToShortDateString()
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (loan.IsOverdue && !loan.IsReturned)
+            {
+                <div class="alert alert-danger mt-3">
+                    <strong>Este empréstimo está vencido há @((DateTime.Now - loan.DueDate).Days) dias!</strong>
+                    <div>Multa atual: R$ @fine.ToString("F2")</div>
+                </div>
+            }
+            else if (loan.IsReturned && fine > 0)
+            {
+                <div class="alert alert-warning mt-3">
+                    <strong>Este livro foi devolvido com atraso.</strong>
+                    <div>Multa: R$ @fine.ToString("F2")</div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Histórico</div>
+        <div class="card-body">
+            <ul class="timeline">
+                <li class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h5 class="timeline-title">Empréstimo Registrado</h5>
+                        <p>@loan.LoanDate.ToString("dd/MM/yyyy HH:mm")</p>
+                        <p>Livro emprestado para @loan.BorrowerName</p>
+                    </div>
+                </li>
+
+                @if (loan.DueDate != loan.LoanDate.AddDays(14))
+                {
+                    <li class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h5 class="timeline-title">Prazo Estendido</h5>
+                            <p>Nova data de devolução: @loan.DueDate.ToString("dd/MM/yyyy")</p>
+                        </div>
+                    </li>
+                }
+
+                @if (loan.ReturnDate.HasValue)
+                {
+                    <li class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h5 class="timeline-title">Livro Devolvido</h5>
+                            <p>@loan.ReturnDate.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                            @if (fine > 0)
+                            {
+                                <p>Multa por atraso: R$ @fine.ToString("F2")</p>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 40px;
+        margin-bottom: 50px;
+        list-style-type: none;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        border: 2px solid #4285f4;
+        background-color: #fff;
+        left: -40px;
+        top: 4px;
+    }
+
+    .timeline-content {
+        padding-bottom: 15px;
+        border-bottom: 1px dashed #ddd;
+    }
+
+    .timeline-item:last-child .timeline-content {
+        border-bottom: none;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Loan loan;
+    private decimal fine;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLoan();
+    }
+
+    private async Task LoadLoan()
+    {
+        loan = await LoanService.GetLoanByIdAsync(Id);
+        if (loan != null)
+        {
+            fine = await LoanService.CalculateFineAsync(Id);
+        }
+    }
+
+    private async Task ReturnBook()
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Confirmar a devolução do livro?"))
+        {
+            await LoanService.ReturnBookAsync(Id);
+            await LoadLoan();
+        }
+    }
+}

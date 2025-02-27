@@ -1,0 +1,194 @@
+﻿@page "/emprestimos"
+
+@using LibraryAppBlazor.Domain.Entities;
+@using LibraryAppBlazor.Application.Services;
+@inject ILoanService LoanService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<h3>Biblioteca - Gerenciamento de Empréstimos</h3>
+
+<div class="mb-3 d-flex justify-content-between">
+	<div>
+		<a href="/emprestimos/novo" class="btn btn-primary">Novo Empréstimo</a>
+	</div>
+	<div>
+		<div class="btn-group" role="group">
+			<button class="btn @(currentView == "todos" ? "btn-primary" : "btn-outline-primary")"
+					@onclick="() => ChangeView(todosView)">
+				Todos
+			</button>
+			<button class="btn @(currentView == "ativos" ? "btn-primary" : "btn-outline-primary")"
+					@onclick="() => ChangeView(ativosView)">
+				Ativos
+			</button>
+			<button class="btn @(currentView == "vencidos" ? "btn-primary" : "btn-outline-primary")"
+					@onclick="() => ChangeView(vencidosView)">
+				Vencidos
+			</button>
+		</div>
+	</div>
+</div>
+
+@if(loans == null)
+{
+	<p>Carregando...</p>
+}
+else if (!loans.Any())
+{
+	<div class="alert alert-info">
+		Nenhum empréstimo encontrado.
+	</div>
+}
+else
+{
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Livro</th>
+				<th>Solicitante</th>
+				<th>Data de Empréstimo</th>
+				<th>Data de Devolução</th>
+				<th>Status</th>
+				<th>Ações</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var loan in loans)
+			{
+				<tr class="@(loan.IsOverdue && !loan.IsReturned ? "table-danger" : loan.IsReturned ? "table-success" : "")">
+					<td>@loan.Book.Title</td>
+					<td>@loan.BorrowerName</td>
+					<td>@loan.LoanDate.ToShortDateString()</td>
+					<td>@loan.DueDate.ToShortDateString()</td>
+					<td>
+						@if (loan.IsReturned)
+						{
+							<span class="badge bg-success">Devolvido</span>
+						}
+						else if (loan.IsOverdue)
+						{
+							<span class="badge bg-danger">Vencido</span>
+							<small class="d-block">(@((DateTime.Now - loan.DueDate).Days) dias)</small>
+						}
+						else
+						{
+							<span class="badge bg-primary">Ativo</span>
+							<small class="d-block">(@((loan.DueDate - DateTime.Now).Days) dias restantes)</small>
+						}
+					</td>
+					<td>
+						@if(!loan.IsReturned)
+						{
+							<button class="btn btn-sm btn-success me-1" @onclick="()=> ReturnBook(loan.Id)">Devolver</button>
+							<button class="btn btn-sm btn-secondary me-1" @onclick="()=> ShowExtendModal(loan)">Estender</button>
+						}
+						<button class="btn btn-sm btn-primary" @onclick="()=> ViewDetails(loan.Id)">Detalhes</button>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+<!-- Modal to extender loan-->
+@if (selectedLoan != null)
+{
+	<div class="modal fade show" style="display : block;" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Estender Empréstimo</h5>
+					<button type="button" class="btn-close" @onclick="CloseModal"></button>
+				</div>
+				<div class="modal-body">
+					<p>Empréstimo do livro <strong>@selectedLoan.Book.Title</strong> para <strong>@selectedLoan.BorrowerName</strong>.</p>
+					<p>Data atual de devolução: <strong>@selectedLoan.DueDate.ToShortDateString()</strong></p>
+
+					<div class="form-group">
+						<label for="additionalDays">Dias adicionais:</label>
+						<input type="number" class="form-control" id="additionalDays" @bind="additionalDays" />
+					</div>
+					@if (additionalDays > 0)
+					{
+						<p class="mt-3">
+							Nova data de devolução: <strong>@selectedLoan.DueDate.AddDays(additionalDays).ToShortDateString()</strong>
+						</p>
+					}
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancelar</button>
+					<button type="button" class="btn btn-primary" @onclick="ExtendLoan" disabled="@(additionalDays <= 0)">Confirmar</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal-backdrop fade show"></div>
+}
+
+@code {
+	private IEnumerable<Loan> loans;
+	private string currentView = "todos";
+	private Loan selectedLoan;
+	private int additionalDays = 7;
+
+	private const string todosView = "todos";
+	private const string ativosView = "ativos";
+	private const string vencidosView = "vencidos";
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadLoans();
+	}
+
+	private async Task LoadLoans()
+	{
+		loans = currentView switch
+		{
+			"ativos" => await LoanService.GetActiveLoansAsync(),
+			"vencidos" => await LoanService.GetOverdueLoansAsync(),
+			_ => await LoanService.GetAllLoansAsync()
+		};
+	}
+
+	private async Task ChangeView(string view)
+	{
+		currentView = view;
+		await LoadLoans();
+	}
+
+	private async Task ReturnBook(Guid id)
+	{
+		if (await JSRuntime.InvokeAsync<bool>("confirm", "Confirmar a devolução do livro?"))
+		{
+			await LoanService.ReturnBookAsync(id);
+			await LoadLoans();
+		}
+	}
+
+	private void ShowExtendModal(Loan loan)
+	{
+		selectedLoan = loan;
+		additionalDays = 7;
+	}
+
+	private void CloseModal()
+	{
+		selectedLoan = null;
+	}
+
+	private async Task ExtendLoan()
+	{
+		if (selectedLoan != null && additionalDays > 0)
+		{
+			await LoanService.ExtendLoanAsync(selectedLoan.Id, additionalDays);
+			await LoadLoans();
+			selectedLoan = null;
+		}
+	}
+
+	private void ViewDetails(Guid id)
+	{
+		NavigationManager.NavigateTo($"/emprestimos/detalhes/{id}");
+	}
+}

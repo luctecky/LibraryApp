@@ -52,7 +52,7 @@ namespace LibraryAppBlazor.Application.Services
 			await _loanRepository.UpdateAsync(loan);
 		}
 
-		public async Task<IEnumerable<Loan>> GetActiveLoansdAsync()
+		public async Task<IEnumerable<Loan>> GetActiveLoansAsync()
 		{
 			return await _loanRepository.GetActiveLoansAsync();
 		}

@@ -1,9 +1,4 @@
 ﻿using LibraryAppBlazor.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LibraryAppBlazor.Application.Services
 {
@@ -22,7 +17,7 @@ namespace LibraryAppBlazor.Application.Services
 		Task ExtendLoanAsync(Guid loanId, int additionalDays);
 
 		//Espcific Queries
-		Task<IEnumerable<Loan>> GetActiveLoansdAsync();
+		Task<IEnumerable<Loan>> GetActiveLoansAsync();
 
 		Task<IEnumerable<Loan>> GetOverdueLoansAsync();
 

@@ -75,5 +75,13 @@ namespace LibraryApp.Domain.Entities
 		{
 			return _loans.Any(loan => loan.IsOverdue());
 		}
+
+		public void AddLoan(Loan loan)
+		{
+			if (!IsActive)
+				throw new DomainExceptions("User is not active");
+
+			_loans.Add(loan);
+		}
 	}
 }

@@ -6,7 +6,7 @@ namespace LibraryApp.Domain.Interfaces.Repositories
 	public interface IRepository<T> where T : BaseEntity
 	{
 		//Method to query all entities
-		Task<T> GetByIdAdync(Guid id);
+		Task<T> GetByIdAsync(Guid id);
 
 		Task<IEnumerable<T>> GetAllAsync();
 

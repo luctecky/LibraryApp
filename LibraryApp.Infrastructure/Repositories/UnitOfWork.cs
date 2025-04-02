@@ -36,7 +36,7 @@ namespace LibraryApp.Infrastructure.Repositories
 			}
 			finally
 			{
-				await _transaction?.RollbackAsync();
+				_transaction?.Dispose();
 				_transaction = null;
 			}
 		}

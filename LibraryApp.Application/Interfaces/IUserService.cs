@@ -10,7 +10,7 @@ namespace LibraryApp.Application.Interfaces
 
 		Task<UserDto> GetUserByEmailAsync(string email);
 
-		Task<UserDto> GetUserByDocumentIdAsync(string DocumentId);
+		Task<UserDto> GetUserByDocumentIdAsync(string documentId);
 
 		Task<UserDto> CreateUserAsync(CreateUserDto userDto);
 

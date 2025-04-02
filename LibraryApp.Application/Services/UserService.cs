@@ -27,16 +27,22 @@ namespace LibraryApp.Application.Services
 
 			user.ActiveUser();
 
+			await _unitOfWork.Users.UpdateAsync(user);
 			await _unitOfWork.SaveChangesAsync();
 		}
 
 		public async Task<UserDto> CreateUserAsync(CreateUserDto userDto)
 		{
 			//verify if user already exists
-			var existingUser = await _unitOfWork.Users.GetByEmailAsync(userDto.Email);
+			var existingUserEmail = await _unitOfWork.Users.GetByEmailAsync(userDto.Email);
 
-			if (existingUser != null)
+			if (existingUserEmail != null)
 				throw new DomainExceptions($"User email {userDto.Email} already exists.");
+
+			var existingDocumentId = await _unitOfWork.Users.GetByDocumentIdAsync(userDto.DocumentId);
+
+			if (existingDocumentId != null)
+				throw new DomainExceptions($"User DocumentId {userDto.DocumentId} already exists.");
 
 			//Create a instance of user
 			var user = _mapper.Map<User>(userDto);
@@ -58,8 +64,16 @@ namespace LibraryApp.Application.Services
 			if (!user.IsActive)
 				throw new DomainExceptions($"User Id {id} is already inactive.");
 
+			//Verify if user has Active Loans
+
+			var activeLoans = await _unitOfWork.Loans.GetLoansByUserAsync(id);
+
+			if (activeLoans.Any(loan => !loan.IsReturned))
+				throw new DomainExceptions($"User Id {id} has active loans.");
+
 			user.DeactivateUser();
 
+			await _unitOfWork.Users.UpdateAsync(user);
 			await _unitOfWork.SaveChangesAsync();
 		}
 
@@ -90,12 +104,12 @@ namespace LibraryApp.Application.Services
 			return _mapper.Map<IEnumerable<UserDto>>(users);
 		}
 
-		public async Task<UserDto> GetUserByDocumentIdAsync(string DocumentId)
+		public async Task<UserDto> GetUserByDocumentIdAsync(string documentId)
 		{
-			var user = await _unitOfWork.Users.GetByDocumentIdAsync(DocumentId);
+			var user = await _unitOfWork.Users.GetByDocumentIdAsync(documentId);
 
 			if (user == null)
-				throw new DomainExceptions($"User DocumentId {DocumentId} not found.");
+				throw new DomainExceptions($"User DocumentId {documentId} not found.");
 
 			return _mapper.Map<UserDto>(user);
 		}
@@ -122,10 +136,28 @@ namespace LibraryApp.Application.Services
 
 		public async Task<UserDto> UpdateUserAsync(UpdateUserDto userDto)
 		{
-			var user = await _unitOfWork.Users.GetByEmailAsync(userDto.Email);
+			var user = await _unitOfWork.Users.GetByIdAsync(userDto.Id);
 
 			if (user == null)
-				throw new DomainExceptions($"User email {userDto.Email} not found.");
+				throw new DomainExceptions($"User Id {userDto.Id} not found.");
+
+			//Verify if data has changed and if exists other user with the same data
+			if (user.Email != userDto.Email)
+			{
+				var existingUserEmail = await _unitOfWork.Users.GetByEmailAsync(userDto.Email);
+
+				if (existingUserEmail != null && existingUserEmail.Id != userDto.Id)
+					throw new DomainExceptions($"User email {userDto.Email} already exists.");
+			}
+
+			//Verify if documentId has changed and if exists other user with the same documentId
+			if (user.DocumentId != userDto.DocumentId)
+			{
+				var existingDocumentId = await _unitOfWork.Users.GetByDocumentIdAsync(userDto.DocumentId);
+
+				if (existingDocumentId != null && existingDocumentId.Id != userDto.Id)
+					throw new DomainExceptions($"User DocumentId {userDto.DocumentId} already exists.");
+			}
 
 			user.UpdateUserInfo(
 				userDto.Name,

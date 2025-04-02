@@ -26,19 +26,51 @@ namespace LibraryApp.Application.Services
 			if (book == null)
 				throw new DomainExceptions($"Book Id {loanDto.BookId} not found.");
 
+			//verify if user is active
 			var user = await _unitOfWork.Users.GetByIdAsync(loanDto.UserId);
 
 			if (user == null)
 				throw new DomainExceptions($"User Id {loanDto.UserId} not found.");
 
-			//Create a instance of loan
-			var loan = new Loan(book, user);
+			if (!user.IsActive)
+				throw new DomainExceptions($"User Id {loanDto.UserId} is not active.");
 
-			//Add loan to the repository
-			await _unitOfWork.Loans.AddAsync(loan);
-			await _unitOfWork.SaveChangesAsync();
+			//verify if book is available
+			if (book.AvaliableCopies <= 0)
+				throw new DomainExceptions($"Book Id {loanDto.BookId} is not available.");
 
-			return _mapper.Map<LoanDto>(loan);
+			var userLoans = await _unitOfWork.Loans.GetLoansByUserAsync(loanDto.UserId);
+			var activeLoans = userLoans.Where(loan => !loan.IsReturned);
+
+			if (activeLoans.Count() >= 3)
+				throw new DomainExceptions($"User Id {loanDto.UserId} has reached the maximum number of loans.");
+
+			if (userLoans.Any(loan => loan.IsOverdue()))
+				throw new DomainExceptions($"User Id {loanDto.UserId} has overdue loans.");
+
+			//Start a transaction
+
+			await _unitOfWork.BeginTransactionAsync();
+
+			try
+			{
+				//create a loan
+				var loan = new Loan(book, user);
+
+				await _unitOfWork.Loans.AddAsync(loan);
+				await _unitOfWork.SaveChangesAsync();
+
+				//commit the transaction
+				await _unitOfWork.CommitTransactionAsync();
+
+				return _mapper.Map<LoanDto>(loan);
+			}
+			catch (Exception)
+			{
+				//rollback the transaction
+				await _unitOfWork.RollbackTransactionAsync();
+				throw;
+			}
 		}
 
 		public async Task ExtendLoanAsync(Guid id, int additionalDays)
@@ -50,6 +82,9 @@ namespace LibraryApp.Application.Services
 
 			if (loan.IsReturned)
 				throw new DomainExceptions($"Loan Id {id} was already returned.");
+
+			if (loan.IsOverdue())
+				throw new DomainExceptions($"Loan Id {id} is overdue.");
 
 			loan.ExtendLoan(additionalDays);
 
@@ -117,20 +152,38 @@ namespace LibraryApp.Application.Services
 			return _mapper.Map<IEnumerable<LoanDto>>(overdueLoans);
 		}
 
-		public async Task ReturnLoanAsync(Guid id)
+		public async Task ReturnBookAsync(Guid id)
 		{
 			var loan = await _unitOfWork.Loans.GetByIdAsync(id);
 
 			if (loan == null)
 				throw new DomainExceptions($"Loan Id {id} not found.");
 
+			//verify if the book was already returned
 			if (loan.IsReturned)
 				throw new DomainExceptions($"Loan Id {id} was already returned.");
 
-			loan.ReturnBook();
+			//Start a transaction
 
-			await _unitOfWork.Loans.UpdateAsync(loan);
-			await _unitOfWork.SaveChangesAsync();
+			await _unitOfWork.BeginTransactionAsync();
+
+			try
+			{
+				//return the book
+				loan.ReturnBook();
+
+				await _unitOfWork.Loans.UpdateAsync(loan);
+				await _unitOfWork.SaveChangesAsync();
+
+				//commit the transaction
+				await _unitOfWork.CommitTransactionAsync();
+			}
+			catch (Exception)
+			{
+				//rollback the transaction
+				await _unitOfWork.RollbackTransactionAsync();
+				throw;
+			}
 		}
 	}
 }

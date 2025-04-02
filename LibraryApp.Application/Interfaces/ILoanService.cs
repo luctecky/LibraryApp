@@ -20,6 +20,6 @@ namespace LibraryApp.Application.Interfaces
 
 		Task ExtendLoanAsync(Guid id, int additionalDays);
 
-		Task ReturnLoanAsync(Guid id);
+		Task ReturnBookAsync(Guid id);
 	}
 }

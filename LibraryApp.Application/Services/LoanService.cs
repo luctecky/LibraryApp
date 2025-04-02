@@ -12,21 +12,27 @@ namespace LibraryApp.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IMapper _mapper;
 
+		public LoanService(IUnitOfWork unitOfWork, IMapper mapper)
+		{
+			_unitOfWork = unitOfWork;
+			_mapper = mapper;
+		}
+
 		public async Task<LoanDto> CreateLoanAsync(CreateLoanDto loanDto)
 		{
 			//verify if book is available
-			var avaliableBook = await _unitOfWork.Loans.GetActiveLoansAsync();
+			var book = await _unitOfWork.Books.GetByIdAsync(loanDto.BookId);
 
-			if (avaliableBook.Any(book => book.BookId == loanDto.BookId && book.IsReturned == false))
-				throw new DomainExceptions($"Book Id {loanDto.BookId} is not available.");
+			if (book == null)
+				throw new DomainExceptions($"Book Id {loanDto.BookId} not found.");
 
-			//verify if user has active loans
-			var activeLoans = await _unitOfWork.Loans.GetLoansByUserAsync(loanDto.UserId);
-			if (activeLoans.Any(loans => !loans.IsReturned))
-				throw new DomainExceptions($"User Id {loanDto.UserId} has active loans.");
+			var user = await _unitOfWork.Users.GetByIdAsync(loanDto.UserId);
+
+			if (user == null)
+				throw new DomainExceptions($"User Id {loanDto.UserId} not found.");
 
 			//Create a instance of loan
-			var loan = _mapper.Map<Loan>(loanDto);
+			var loan = new Loan(book, user);
 
 			//Add loan to the repository
 			await _unitOfWork.Loans.AddAsync(loan);

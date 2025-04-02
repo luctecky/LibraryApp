@@ -21,7 +21,8 @@ namespace LibraryApp.Application.Services
 		public async Task<BookDto> CreateBookAsync(CreateBookDto bookDto)
 		{
 			//verify if book already exists
-			var existingbook = _unitOfWork.Books.GetByISBNAsync(bookDto.ISBN);
+			var existingbook = await _unitOfWork.Books.GetByISBNAsync(bookDto.ISBN);
+
 			if (existingbook != null)
 				throw new DomainExceptions($"Book ISBN {bookDto.ISBN} already exists.");
 
@@ -38,11 +39,13 @@ namespace LibraryApp.Application.Services
 		public async Task DeleteBookAsync(Guid id)
 		{
 			var book = await _unitOfWork.Books.GetByIdAsync(id);
+
 			if (book == null)
 				throw new DomainExceptions($"Book Id {id} not found.");
 
 			//Verify if book has Active Loans
 			var activeLoans = await _unitOfWork.Loans.GetLoansByBookAsync(id);
+
 			if (activeLoans.Any(loans => !loans.IsReturned))
 				throw new DomainExceptions($"Book Id {id} has active loans.");
 
@@ -67,7 +70,8 @@ namespace LibraryApp.Application.Services
 
 		public async Task<BookDto> GetBookByISBNAsync(string isbn)
 		{
-			var book = _unitOfWork.Books.GetByISBNAsync(isbn);
+			var book = await _unitOfWork.Books.GetByISBNAsync(isbn);
+
 			if (book == null)
 				throw new DomainExceptions($"Book ISBN {isbn} not found.");
 
@@ -76,14 +80,20 @@ namespace LibraryApp.Application.Services
 
 		public async Task<IEnumerable<BookDto>> GetBooksByAuthorAsync(string author)
 		{
-			var books = _unitOfWork.Books.GetByAuthorAsync(author);
+			var books = await _unitOfWork.Books.GetByAuthorAsync(author);
+
+			if (books == null)
+				throw new DomainExceptions($"No books found for author {author}.");
 
 			return _mapper.Map<IEnumerable<BookDto>>(books);
 		}
 
 		public async Task<IEnumerable<BookDto>> GetBooksByTitleAsync(string title)
 		{
-			var books = _unitOfWork.Books.GetByTitleAsync(title);
+			var books = await _unitOfWork.Books.GetByTitleAsync(title);
+
+			if (books == null)
+				throw new DomainExceptions($"No books found for title {title}.");
 
 			return _mapper.Map<IEnumerable<BookDto>>(books);
 		}

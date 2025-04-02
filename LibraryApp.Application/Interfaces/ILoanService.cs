@@ -13,9 +13,9 @@ namespace LibraryApp.Application.Interfaces
 
 		Task<LoanDto> GetLoanByIdAsync(Guid id);
 
-		Task<IEnumerable<LoanDto>> GetActiveAsync(string status);
+		Task<IEnumerable<LoanDto>> GetActiveAsync();
 
-		Task<IEnumerable<LoanDto>> GetOverdueLoansAsync(string status);
+		Task<IEnumerable<LoanDto>> GetOverdueLoansAsync();
 
 		Task<IEnumerable<LoanDto>> GetLoansByUserAsync(Guid userId);
 

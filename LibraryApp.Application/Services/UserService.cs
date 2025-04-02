@@ -12,6 +12,12 @@ namespace LibraryApp.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IMapper _mapper;
 
+		public UserService(IUnitOfWork unitOfWork, IMapper mapper)
+		{
+			_unitOfWork = unitOfWork;
+			_mapper = mapper;
+		}
+
 		public async Task ActivateUserAsync(Guid id)
 		{
 			var user = await _unitOfWork.Users.GetByIdAsync(id);
@@ -22,7 +28,6 @@ namespace LibraryApp.Application.Services
 			user.ActiveUser();
 
 			await _unitOfWork.SaveChangesAsync();
-			await _unitOfWork.CommitTransactionAsync();
 		}
 
 		public async Task<UserDto> CreateUserAsync(CreateUserDto userDto)
@@ -56,7 +61,6 @@ namespace LibraryApp.Application.Services
 			user.DeactivateUser();
 
 			await _unitOfWork.SaveChangesAsync();
-			await _unitOfWork.CommitTransactionAsync();
 		}
 
 		public async Task DeleteUserAsync(Guid id)

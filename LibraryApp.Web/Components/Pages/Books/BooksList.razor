@@ -1,0 +1,92 @@
+﻿@page "/books"
+@using LibraryApp.Application.DTOs.Book
+@using LibraryApp.Application.Interfaces
+@inject IBookService BookService
+@inject NavigationManager NavigationManager
+@inject JSRuntime JSRuntime
+
+<PageTitle>Catálago de Livros</PageTitle>
+
+<h1>Catálago de Livros</h1>
+
+<div class="mb-3">
+	<a href="/books/create" class="btn btn-primary">Adicionar Novo Livro</a>
+</div>
+
+@if(books == null)
+{
+	<p><em>Carregando...</em></p>
+}
+else if(!books.Any())
+{
+	<p>Nenhum livro encontrado. Adicione seu primeiro livro!</p>
+}
+else
+{
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Título</th>
+				<th>Autor</th>
+				<th>ISBN</th>
+				<th>Ano de Publicação</th>
+				<th>Exemplares disponíveis</th>
+				<th>Total de Exemplares</th>
+				<th>Ações</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var book in books)
+			{
+				<tr>
+					<td>@book.Title</td>
+					<td>@book.Author</td>
+					<td>@book.ISBN</td>
+					<td>@book.PublicationYear</td>
+					<td>@book.AvaliableCopies</td>
+					<td>@book.TotalCopies</td>
+					<td>
+						<a href="/books/details/@book.Id" class="btn btn-info btn-sm">Detalhes</a>
+						<a href="/books/edit/@book.Id">Editar</a>
+						<button class="btn btn-danger btn-sm" @onclick="() => DeleteBook(book.Id)">Excluir</button>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+
+@code {
+	private IEnumerable<BookDto> books;
+
+	protected override async Task OnInitializedAsync()
+	{
+		try
+		{
+			books = await BookService.GetAllBooksAsync();
+		}
+		catch (Exception ex)
+		{
+			//In a real-world application, you should log the exception
+			Console.WriteLine($"Erro ao carregar livros: {ex.Message}");
+		}
+	}
+
+	private async Task DeleteBook(Guid id)
+	{
+		if (!await JSRuntime.InvokeAsync<bool>("confirm", "Tem certeza que deseja excluir este livro? "));
+		return;
+
+		try
+		{
+			await BookService.DeleteBookAsync(id);
+			books = await BookService.GetAllBooksAsync();
+		}
+		catch (Exception ex)
+		{
+			//In a real-world application, you should log the exception
+			Console.WriteLine($"Erro ao excluir livro: {ex.Message}");
+		}
+	}
+}

@@ -3,6 +3,9 @@ using LibraryApp.Infrastructure.Data;
 using LibraryApp.Domain.Interfaces.Repositories;
 using LibraryApp.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using LibraryApp.Application.Mappings;
+using LibraryApp.Application.Interfaces;
+using LibraryApp.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,12 +18,20 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseNpgsql(connectionString));
 
+//Register AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
 //Register Repositories and UnitOfWork
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<ILoanRepository, LoanRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+//Register Services of the Application Layer
+builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<ILoanService, LoanService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
@@ -33,7 +44,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
 

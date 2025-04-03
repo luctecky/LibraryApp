@@ -1,0 +1,89 @@
+﻿@using LibraryApp.Application.DTOs.Book
+@using LibraryApp.Application.Interfaces
+@inject IBookService BookService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Adicionar Novo Livro</PageTitle>
+
+<h1>Adicionar Novo Livro</h1>
+
+<div class="row">
+	<div class="col-md-6">
+		<EditForm Model="@bookDto" OnInvalidSubmit="CreateBookAsync">
+			<DataAnnotationsValidator />
+			<ValidationSummary />
+
+			<div class="form-group mb-3">
+				<label for="title">Título</label>
+				<InputText id="title" class="form-control" @bind-Value="bookDto.Title" />
+				<ValidationMessage For="@(() => bookDto.Title)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="author">Autor</label>
+				<InputText id="author" class="form-control" @bind-Value="bookDto.Author" />
+				<ValidationMessage For="@(() => bookDto.Author)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="isbn">ISBN</label>
+				<InputText id="isbn" class="form-control" @bind-Value="bookDto.ISBN" />
+				<ValidationMessage For="@(() => bookDto.ISBN)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="publicationYear">Ano de Publicação</label>
+				<InputNumber id="publicationYear" class="form-control" @bind-Value="bookDto.PublicationYear" />
+				<ValidationMessage For="@(() => bookDto.PublicationYear)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="publisher">Editora</label>
+				<InputNumber id="publisher" class="form-control" @bind-Value="bookDto.Publisher" />
+				<ValidationMessage For="@(() => bookDto.Publisher)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="totalCopies">Total de Exemplares</label>
+				<InputNumber id="totalCopies" class="form-control" @bind-Value="bookDto.TotalCopies" />
+				<ValidationMessage For="@(() => bookDto.TotalCopies)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="genre">Gênero</label>
+				<InputNumber id="genre" class="form-control" @bind-Value="bookDto.Genre" />
+				<ValidationMessage For="@(() => bookDto.Genre)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<label for="description">Descrição</label>
+				<InputNumber id="description" class="form-control" @bind-Value="bookDto.Description" />
+				<ValidationMessage For="@(() => bookDto.Description)" />
+			</div>
+
+			<div class="form-group mb-3">
+				<button type="submit" class="btn btn-primary">Salvar</button>
+				<a href="/books" class="btn btn-secondary">Cancelar</a>
+			</div>
+
+		</EditForm>
+	</div>
+</div>
+
+@code {
+	private CreateBookDto bookDto = new CreateBookDto();
+	private string errorMessage;
+
+	private async Task CreateBookAsync()
+	{
+		try
+		{
+			await BookService.CreateBookAsync(bookDto);
+			NavigationManager.NavigateTo("/books");
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Erro ao criar livro: {ex.Message}";
+		}
+	}
+}

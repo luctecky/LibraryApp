@@ -1,4 +1,5 @@
 ﻿@page "/books"
+@rendermode InteractiveServer
 @using LibraryApp.Application.DTOs.Book
 @using LibraryApp.Application.Interfaces
 @inject IBookService BookService
@@ -75,7 +76,7 @@ else
 
 	private async Task DeleteBook(Guid id)
 	{
-		if (!await JSRuntime.InvokeAsync<bool>("confirm", "Tem certeza que deseja excluir este livro? "));
+		if (!await JSRuntime.InvokeAsync<bool>("confirm", "Tem certeza que deseja excluir este livro?"))
 		return;
 
 		try

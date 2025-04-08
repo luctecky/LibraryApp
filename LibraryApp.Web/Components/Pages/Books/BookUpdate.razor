@@ -1,0 +1,122 @@
+﻿@page "/books/edit/{Id:guid}"
+@rendermode InteractiveServer
+@using LibraryApp.Application.DTOs.Book
+@using LibraryApp.Application.Interfaces
+@inject IBookService BookService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Atualizar Livro</PageTitle>
+
+<h1>Atualizar Livro</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <EditForm Model="@book" OnValidSubmit="UpdateBookAsync" FormName="BookUpdate">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group mb-3">
+                <label for="title">Título:</label>
+                <InputText id="title" @bind-Value="book.Title" class="form-control" />
+                <ValidationMessage For="@(() => book.Title)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="author">Autor:</label>
+                <InputText id="author" @bind-Value="book.Author" class="form-control" />
+                <ValidationMessage For="@(() => book.Author)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="isbn">ISBN:</label>
+                <InputText id="isbn" @bind-Value="book.ISBN" class="form-control" />
+                <ValidationMessage For="@(() => book.ISBN)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="publicationYear">Ano de Publicação:</label>
+                <InputNumber id="publicationYear" @bind-Value="book.PublicationYear" class="form-control" />
+                <ValidationMessage For="@(() => book.PublicationYear)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="publisher">Editora:</label>
+                <InputText id="publisher" @bind-Value="book.Publisher" class="form-control" />
+                <ValidationMessage For="@(() => book.Publisher)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="totalCopies">Total de Exemplares:</label>
+                <InputNumber id="totalCopies" @bind-Value="book.TotalCopies" class="form-control" />
+                <ValidationMessage For="@(() => book.TotalCopies)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="genre">Gênero:</label>
+                <InputText id="genre" @bind-Value="book.Genre" class="form-control" />
+                <ValidationMessage For="@(() => book.Genre)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="description">Descrição:</label>
+                <InputTextArea id="description" @bind-Value="book.Description" class="form-control" rows="4" />
+                <ValidationMessage For="@(() => book.Description)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a href="/books" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+        [Parameter]
+        public Guid Id { get; set; }
+
+	private BookDto book = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            book = await BookService.GetBookByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar livro: {ex.Message}");
+        }
+    }
+
+    private async Task UpdateBookAsync()
+    {
+        try
+        {
+            UpdateBookDto bookDto = new UpdateBookDto
+			{
+				Id = book.Id,
+				Title = book.Title,
+				Author = book.Author,
+				ISBN = book.ISBN,
+				PublicationYear = book.PublicationYear,
+				Publisher = book.Publisher,
+				TotalCopies = book.TotalCopies,
+				Genre = book.Genre,
+				Description = book.Description
+			};
+
+            if(!await JSRuntime.InvokeAsync<bool>("confirm", "Tem certeza que desja atualizar o livro?"))
+		    return;
+
+			await BookService.UpdateBookAsync(bookDto);
+
+			NavigationManager.NavigateTo("/books");
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Erro ao atualizar livro: {ex.Message}");
+		}
+    }
+}

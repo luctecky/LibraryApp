@@ -21,4 +21,14 @@
     <ProjectReference Include="..\LibraryApp.Infrastructure\LibraryApp.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\fonts\" />
+    <Folder Include="wwwroot\css\" />
+    <Folder Include="wwwroot\Images\icons\" />
+    <Folder Include="wwwroot\Images\logo\" />
+    <Folder Include="wwwroot\Images\backgrounds\" />
+    <Folder Include="wwwroot\js\" />
+    <Folder Include="wwwroot\lib\" />
+  </ItemGroup>
+
 </Project>

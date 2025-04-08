@@ -66,15 +66,16 @@
 
             <div class="form-group mb-3">
                 <button type="submit" class="btn btn-primary">Salvar</button>
-                <a href="/books" class="btn btn-secondary">Cancelar</a>
+                <a href="/" class="btn btn-secondary">Cancelar</a>
             </div>
         </EditForm>
     </div>
 </div>
 
 @code {
-        [Parameter]
-        public Guid Id { get; set; }
+
+    [Parameter]
+    public Guid Id { get; set; }
 
 	private BookDto book = new();
 
@@ -112,7 +113,7 @@
 
 			await BookService.UpdateBookAsync(bookDto);
 
-			NavigationManager.NavigateTo("/books");
+			NavigationManager.NavigateTo("/");
 		}
 		catch (Exception ex)
 		{
